@@ -17,16 +17,22 @@ Przewiduje się zastosowanie głębokich sieci neuronowych, w szczególności si
 
 ---
 
+## Plan:
+detekcja wieku: DeepFace
+detekcja wózków: Open Images Dataset V7
+
+
 ## Wymagania
 
 Do uruchomienia projektu potrzebujesz:
 
-- **Python 3.8 - 3.12**
+- **Python 3.8 - 3.12 (polecany: 3.9)**
 - **PyTorch**
 - **torchvision**
 - **NumPy**
 - **Pandas**
 - **OpenCV** (do przetwarzania obrazów)
+- **deepface**
 - **Matplotlib** (do wizualizacji)
 - **scikit-learn** (do ewaluacji modelu)
 
@@ -35,5 +41,11 @@ Do uruchomienia projektu potrzebujesz:
 1. **Skonfiguruj wirtualne środowisko** (opcjonalnie, ale zalecane):
 
    ```bash
-   python -m venv venv
-   source venv/bin/activate   # Na Windows: venv\Scripts\activate
+   pip install deepface opencv-python pandas
+   pip install tf-keras
+   ```
+tip: jeśli masz kilka wersji pythona na urządzeniu
+musisz doprecyzować wersję na którą pobierasz te biblioteki
+np. 
+
+py -3.9 -m pip install ...
