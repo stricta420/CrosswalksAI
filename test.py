@@ -48,6 +48,26 @@ def show_image(image):
     fig = plt.figure(figsize=(25, 4))
     plt.imshow(np.transpose(image[0], (1, 2, 0)))
 
+#Po prostu funkcja z calym mainem, aby do serwera wrzucić testowo
+def allInOne(tensor):
+    model = models.densenet161(pretrained=True)
+    classifier_input = model.classifier.in_features
+    num_labels = 3
+    classifier = nn.Sequential(nn.Linear(classifier_input, 1024),
+                            nn.ReLU(),
+                            nn.Linear(1024, 512),
+                            nn.ReLU(),
+                            nn.Linear(512, num_labels),
+                            nn.LogSoftmax(dim=1))
+    model.classifier = classifier
+
+    model.load_state_dict(torch.load('models/trained_model.pth'))
+    model.eval()  # Ustaw model w trybie ewaluacji
+    print("Model loaded from models/trained_model.pth")
+    top_prob, top_class = predict(tensor, model)
+    predicted_label = labels_map[top_class]
+    return predicted_label,top_prob
+
 # Załaduj model
 model = models.densenet161(pretrained=True)
 classifier_input = model.classifier.in_features
