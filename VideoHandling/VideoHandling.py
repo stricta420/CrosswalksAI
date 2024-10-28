@@ -88,13 +88,63 @@ def inputCamera(interval = 1):
     cap.release()
     cv.destroyAllWindows()
 
+def takeAPicture():
+    cap = cv.VideoCapture(0)
+    ret, frame = cap.read()
+    if ret:
+        cap.release()
+        return frame
+    else:
+        cap.release()
+        raise Exception("Nie udało się zrobić zdjęcia.")
+    
+def takeAFakePicture(path):
+    frame = cv.imread(path)
+    if frame is None:
+        raise Exception("Nie udało się zrobić zdjęcia.")
+    else:
+        return frame
+
+#funkcja przeksztalcajaca obraz na podobnie do funkcji stasia, ale tylko uzywajac opencv
+def process_image_jak_u_stasia_tylko_inaczej(img):  
+    # Zmiana rozmiaru: dostosowanie krótszego boku do 255 pikseli, zachowanie proporcji
+    height, width = img.shape[:2]
+    if width < height:
+        new_width = 255
+        new_height = int(255 * height / width)
+    else:
+        new_height = 255
+        new_width = int(255 * width / height)
+    img = cv.resize(img, (new_width, new_height))
+    
+    # Przycinanie do rozmiaru 224x224
+    height, width = img.shape[:2]
+    left = (width - 224) // 2
+    top = (height - 224) // 2
+    img = img[top:top+224, left:left+224]
+    
+    # Konwersja obrazu z BGR na RGB
+    img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+    
+    # Normalizacja pikseli (skala 0-1)
+    img = img / 255.0
+
+    # Normalizacja wartości dla kanałów R, G i B
+    img[:, :, 0] = (img[:, :, 0] - 0.485) / 0.229  # R
+    img[:, :, 1] = (img[:, :, 1] - 0.456) / 0.224  # G
+    img[:, :, 2] = (img[:, :, 2] - 0.406) / 0.225  # B
+
+    # Przekształcenie obrazu na tensor PyTorch
+    img = torch.tensor(img, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
+
+    return img
 #Kamera (0 - wbudowana)
 #cap = cv.VideoCapture(0)
 
-if torch.cuda.is_available():
-    print("CUDA jest dostępne!")
-else:
-    print("CUDA nie jest dostępne.")
+# if torch.cuda.is_available():
+#     print("CUDA jest dostępne!")
+# else:
+#     print("CUDA nie jest dostępne.")
 
 #inputFile('Test_Video.mp4',1)
-inputCamera()
+#inputCamera()
