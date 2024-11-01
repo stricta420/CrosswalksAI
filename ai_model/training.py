@@ -1,42 +1,14 @@
 # train.py
 import torch
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
 import torchvision.models as models
 import torch.nn as nn
 import torch.optim as optim
+from PIL import Image
+import numpy as np
 import os
-
-class DataLoaders:
-
-    def __init__(self):
-        self.transformations = self.get_transofrmation()
-        self.train_loader, self.val_loader = self.get_data_loaders()
-
-    def get_transofrmation(self, resize=255, center_crop=224,normalize_mean=None,normalize_std=None):
-        if normalize_mean is None:
-            normalize_mean = [0.485, 0.456, 0.406]
-        if normalize_std is None:
-            normalize_std = [0.229, 0.224, 0.225]
-        transformations = transforms.Compose([
-            transforms.Resize(resize),
-            transforms.CenterCrop(center_crop),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=normalize_mean, std=normalize_std)
-        ])
-        return transformations
+from ai_model.DataLoaders import DataLoaders
 
 
-
-    def get_data_loaders(self, train_set_floder="root/label/train", val_set_folder="root/label/valid"):
-        # Load in each dataset and apply transformations
-        train_set = datasets.ImageFolder(train_set_floder, transform=self.transformations)
-        val_set = datasets.ImageFolder(val_set_folder, transform=self.transformations)
-
-        # Put into a Dataloader
-        train_loader = torch.utils.data.DataLoader(train_set, batch_size=32, shuffle=True)
-        val_loader = torch.utils.data.DataLoader(val_set, batch_size=32, shuffle=True)
-        return train_loader, val_loader
 
 class Model:
     def __init__(self):
@@ -46,8 +18,11 @@ class Model:
         self.device = None
         self.dataModules = DataLoaders()
         self.configure_model()
+        self.labels_map = None
 
 
+    def set_labels_map(self, labels_map):
+        self.labels_map = labels_map
 
 
     def configure_model(self):
@@ -77,8 +52,52 @@ class Model:
 
 
         # Create models directory if it doesn't exist
-        if not os.path.exists('models'):
-            os.makedirs('models')
+        if not os.path.exists('../models'):
+            os.makedirs('../models')
+
+    def predict(self, image):
+        output = self.model.forward(image)
+        output = torch.exp(output)
+        probs, classes = output.topk(1, dim=1)
+        return classes.item(), probs.item()
+
+    def predict_from_tensor(self, image):
+        classes, probs = self.predict(image)
+        return self.labels_map[classes], probs
+
+    def load_eval(self):
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        full_path = os.path.join(base_dir, "models/trained_model.pth")
+        self.model.load_state_dict(torch.load(full_path))
+        self.model.eval()
+
+
+    def process_image(self, image_path):
+        img = Image.open(image_path)
+        width, height = img.size
+        img = img.resize((255, int(255 * (height / width))) if width < height else (int(255 * (width / height)), 255))
+        width, height = img.size
+        left = (width - 224) / 2
+        top = (height - 224) / 2
+        right = (width + 224) / 2
+        bottom = (height + 224) / 2
+        img = img.crop((left, top, right, bottom))
+        img = np.array(img)
+        img = img.transpose((2, 0, 1))
+        img = img / 255
+        img[0] = (img[0] - 0.485) / 0.229
+        img[1] = (img[1] - 0.456) / 0.224
+        img[2] = (img[2] - 0.406) / 0.225
+        img = img[np.newaxis, :]
+        image = torch.from_numpy(img).float()
+        return image
+    def predict_from_path(self, path):
+        image = self.process_image(path)
+        top_class, top_prob = self.predict(image)
+        predicted_label = self.labels_map[top_class]
+        return top_prob, predicted_label
+
+
 
     def train(self):
         epochs = 10
@@ -90,8 +109,8 @@ class Model:
             # Training the model
             self.model.train()
             for inputs, labels in self.dataModules.train_loader:
-                inputs, labels = inputs.to(self.model.device), labels.to(self.model.device)
-                self.model.optimizer.zero_grad()
+                inputs, labels = inputs.to(self.device), labels.to(self.device)
+                self.optimizer.zero_grad()
                 output = self.model.forward(inputs)
                 loss = self.criterion(output, labels)
                 loss.backward()
@@ -123,6 +142,8 @@ class Model:
                                                                                                               self.dataModules.val_loader)))
 
         # Save the model
-        torch.save(self.model.state_dict(), 'models/trained_model.pth')
+        torch.save(self.model.state_dict(), '../models/trained_model.pth')
         print("Model saved as models/trained_model.pth")
 
+ai = Model()
+ai.load_eval()

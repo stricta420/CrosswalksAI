@@ -34,3 +34,14 @@ def send_tensor_to_server(tensor_list):
 
 # Testowe działanie
 send_tensor_to_server(vh.process_image_jak_u_stasia_tylko_inaczej(vh.takeAFakePicture("root/label/valid/trojkat/trojkat_1.png")).tolist())
+send_tensor_to_server(vh.process_image_jak_u_stasia_tylko_inaczej(vh.takeAFakePicture("root/label/valid/trojkat/trojkat_4.png")).tolist())
+send_tensor_to_server(vh.process_image_jak_u_stasia_tylko_inaczej(vh.takeAFakePicture("root/label/valid/kwadrat/kwadrat_2.png")).tolist())
+send_tensor_to_server(vh.process_image_jak_u_stasia_tylko_inaczej(vh.takeAFakePicture("root/label/valid/kolo/kolo_2.png")).tolist())
+send_tensor_to_server(vh.process_image_jak_u_stasia_tylko_inaczej(vh.takeAFakePicture("root/label/valid/trojkat/trojkat_5.png")).tolist())
+send_tensor_to_server(vh.process_image_jak_u_stasia_tylko_inaczej(vh.takeAFakePicture("root/label/valid/trojkat/trojkat_7.png")).tolist())
+send_tensor_to_server(vh.process_image_jak_u_stasia_tylko_inaczej(vh.takeAFakePicture("root/label/valid/kwadrat/kwadrat_1.png")).tolist())
+send_tensor_to_server(vh.process_image_jak_u_stasia_tylko_inaczej(vh.takeAFakePicture("root/label/valid/kolo/kolo_3.png")).tolist())
+send_tensor_to_server(vh.process_image_jak_u_stasia_tylko_inaczej(vh.takeAFakePicture("root/label/valid/trojkat/trojkat_11.png")).tolist())
+send_tensor_to_server(vh.process_image_jak_u_stasia_tylko_inaczej(vh.takeAFakePicture("root/label/valid/trojkat/trojkat_14.png")).tolist())
+send_tensor_to_server(vh.process_image_jak_u_stasia_tylko_inaczej(vh.takeAFakePicture("root/label/valid/kwadrat/kwadrat_12.png")).tolist())
+send_tensor_to_server(vh.process_image_jak_u_stasia_tylko_inaczej(vh.takeAFakePicture("root/label/valid/kolo/kolo_12.png")).tolist())
