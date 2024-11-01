@@ -1,3 +1,5 @@
+import os.path
+
 import cv2 as cv
 import numpy as np
 import torch
@@ -99,8 +101,11 @@ def takeAPicture():
         raise Exception("Nie udało się zrobić zdjęcia.")
     
 def takeAFakePicture(path):
-    frame = cv.imread(path)
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    full_path = os.path.join(base_dir, path)
+    frame = cv.imread(full_path)
     if frame is None:
+        print("Sciezka abs: ", os.path.abspath(full_path))
         raise Exception("Nie udało się zrobić zdjęcia.")
     else:
         return frame
