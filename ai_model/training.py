@@ -6,8 +6,7 @@ import torch.optim as optim
 from PIL import Image
 import numpy as np
 import os
-from ai_model.DataLoaders import DataLoaders
-
+from DataLoaders import DataLoaders
 
 
 class Model:
@@ -17,8 +16,9 @@ class Model:
         self.optimizer = None
         self.device = None
         self.dataModules = DataLoaders()
-        self.configure_model()
+        #self.configure_model()
         self.labels_map = None
+        self.path_to_model = "models/trained_model.pth"
 
 
     def set_labels_map(self, labels_map):
@@ -67,7 +67,7 @@ class Model:
 
     def load_eval(self):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        full_path = os.path.join(base_dir, "models/trained_model.pth")
+        full_path = os.path.join(base_dir, self.path_to_model)
         self.model.load_state_dict(torch.load(full_path))
         self.model.eval()
 
@@ -140,10 +140,13 @@ class Model:
                                                                                                           valid_loss,
                                                                                                           accuracy / len(
                                                                                                               self.dataModules.val_loader)))
-
+    def save(self, path='../models/trained_model.pth'):
         # Save the model
-        torch.save(self.model.state_dict(), '../models/trained_model.pth')
+        torch.save(self.model.state_dict(), path)
         print("Model saved as models/trained_model.pth")
 
-ai = Model()
-ai.load_eval()
+# ai = Model()
+# ai.configure_model()
+# ai.load_eval()
+# ai.train()
+#ai.save()

@@ -49,3 +49,17 @@ musisz doprecyzować wersję na którą pobierasz te biblioteki
 np. 
 
 py -3.9 -m pip install ...
+
+## Get basic yolov7 model
+
+git clone https://github.com/WongKinYiu/yolov7.git
+
+cd yolov7
+
+pip install -r requirements.txt
+
+wget -O yolov7.pt https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt
+
+
+teraz plik yolov7.pt pojawi się w katalogu yolov7, 
+można go teraz przenieść w odpowiednie miejsce

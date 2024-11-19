@@ -151,5 +151,5 @@ def process_image_jak_u_stasia_tylko_inaczej(img):
 # else:
 #     print("CUDA nie jest dostępne.")
 
-#inputFile('Test_Video.mp4',1)
-#inputCamera()
+inputFile('Test_Video.mp4',1)
+inputCamera()

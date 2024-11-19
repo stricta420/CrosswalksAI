@@ -1,0 +1,16 @@
+names:
+- crutches
+- person
+- push_wheelchair
+- walking_frame
+- wheelchair
+nc: 5
+roboflow:
+  license: CC BY 4.0
+  project: crosswalksai
+  url: https://universe.roboflow.com/firsttry-ekt4d/crosswalksai/dataset/1
+  version: 1
+  workspace: firsttry-ekt4d
+test: ../test/images
+train: ./movmentAidImgs/train/images
+val: ./movmentAidImgs/valid/images

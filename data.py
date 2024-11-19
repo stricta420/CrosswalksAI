@@ -1,7 +1,7 @@
 import os
 import random
 from PIL import Image, ImageDraw
-#test
+
 # Ścieżki do folderów dla zbiorów treningowych i walidacyjnych
 train_dir = "root/label/train"
 valid_dir = "root/label/valid"
