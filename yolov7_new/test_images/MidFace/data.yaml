@@ -1,0 +1,12 @@
+names:
+- face
+nc: 1
+roboflow:
+  license: CC BY 4.0
+  project: medium-face-deteciton
+  url: https://universe.roboflow.com/firsttry-ekt4d/medium-face-deteciton/dataset/1
+  version: 1
+  workspace: firsttry-ekt4d
+test: ../test/images
+train: ./MidFace/train/images
+val: ./MidFace/valid/images

@@ -1,0 +1,12 @@
+names:
+- face
+nc: 1
+roboflow:
+  license: CC BY 4.0
+  project: eazy-face-detection
+  url: https://universe.roboflow.com/firsttry-ekt4d/eazy-face-detection/dataset/1
+  version: 1
+  workspace: firsttry-ekt4d
+test: ../test/images
+train: ./EazyFace/train/images
+val: ./EazyFace/valid/images

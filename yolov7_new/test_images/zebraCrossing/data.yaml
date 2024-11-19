@@ -1,0 +1,12 @@
+names:
+- zebracrossing
+nc: 1
+roboflow:
+  license: CC BY 4.0
+  project: crosswalkai-zebracrossing
+  url: https://universe.roboflow.com/firsttry-ekt4d/crosswalkai-zebracrossing/dataset/1
+  version: 1
+  workspace: firsttry-ekt4d
+test: ../test/images
+train: ./zebraCrossing/train/images
+val: ./zebraCrossing/valid/images
