@@ -1,35 +1,49 @@
-from flask import Flask, request, jsonify
+import socket
+import pickle
+import cv2
 import numpy as np
-import torch
-import test
-from ai_model import training
 
-labels_map = {
-    0: "circle",
-    1: "square",
-    2: "triangle"
-}
+# Konfiguracja serwera
+HOST = "127.0.0.1"  # Nasłuch na wszystkich interfejsach sieciowych
+PORT = 5000
 
-ai = training.Model()
-ai.load_eval()
-ai.set_labels_map(labels_map)
-app = Flask(__name__)
+def analyze_image(image):
+    # Prosta analiza obrazu - wykrywanie krawędzi
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    edges = cv2.Canny(gray, 100, 200)
+    return edges
 
-@app.route('/process_tensor', methods=['POST'])
-def process_tensor():
-    data = request.get_json()
-    
-    if "tensor_data" not in data:
-        return jsonify({"error": "Brak danych tensorowych"}), 400
+def main():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind((HOST, PORT))
+    server_socket.listen()
+    print(f"Serwer nasłuchuje na {HOST}:{PORT}...")
 
-    # Odtworzenie tensora z listy
-    tensor_list = data["tensor_data"]
-    tensor_pt = torch.tensor(tensor_list)
+    conn, addr = server_socket.accept()
+    print(f"Połączono z {addr}")
 
-    # shape,prob = test.allInOne(tensor_pt)
-    shape,prob = ai.predict_from_tensor(tensor_pt)
-    # Odpowiedź serwera
-    return jsonify({"shape": shape, "probability": prob}), 200
+    while True:
+        # Odbiór obrazu
+        data = conn.recv(4096)
+        if not data:
+            break
 
-if __name__ == '__main__':
-    app.run(debug=False)
+        # Deserializacja obrazu
+        frame_data = pickle.loads(data)
+        frame = cv2.imdecode(np.frombuffer(frame_data, np.uint8), cv2.IMREAD_COLOR)
+
+        # Analiza obrazu
+        analyzed_frame = analyze_image(frame)
+
+        # Serializacja wyników analizy
+        _, buffer = cv2.imencode('.jpg', analyzed_frame)
+        analyzed_data = pickle.dumps(buffer)
+
+        # Wysyłanie wyników analizy
+        conn.sendall(analyzed_data)
+
+    conn.close()
+    server_socket.close()
+
+if __name__ == "__main__":
+    main()
