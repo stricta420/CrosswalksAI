@@ -30,7 +30,7 @@ def main():
         new_msg = True
 
         while not isfull_msg:
-            data = conn.recv(10000)
+            data = conn.recv(4096)
             if new_msg:
                 print("new msg len:",data[:HEADERSIZE])
                 msglen = int(data[:HEADERSIZE])
@@ -38,9 +38,7 @@ def main():
                 print(f"full message length: {msglen}")
             full_msg += data
             if len(full_msg)-HEADERSIZE == msglen:
-                print("full msg recvd")
-                print(full_msg[HEADERSIZE:])
-                print(pickle.loads(full_msg[HEADERSIZE:]))
+               
                 isfull_msg = True
         
         

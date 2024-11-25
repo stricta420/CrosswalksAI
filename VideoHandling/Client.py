@@ -45,7 +45,7 @@ def main():
             new_msg = True
 
             while True:
-                data = client_socket.recv(10000)
+                data = client_socket.recv(4096)
                 if new_msg:
                     if len(data) < HEADERSIZE:
                         print("Niepełne dane nagłówka, przerywam.")
