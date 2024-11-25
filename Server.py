@@ -9,9 +9,9 @@ from ultralytics import YOLOv10
 HOST = "127.0.0.1"  # Nasłuch na wszystkich interfejsach sieciowych
 PORT = 5000
 HEADERSIZE = 10
-MODEL_PATH = r'C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\models\\human.pt'
-MODEL_PATH1 = r'C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\models\\zebra.pt'
-MODEL_PATH2 = r'C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\models\\best.pt'
+MODEL_PATH = r'models/human.pt'
+MODEL_PATH1 = r'models/zebra.pt'
+MODEL_PATH2 = r'models/best.pt'
 
 models = []
 bounding_box_annotator = sv.BoundingBoxAnnotator()

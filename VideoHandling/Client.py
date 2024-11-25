@@ -19,7 +19,7 @@ def main():
         return
 
     # Otwieranie kamery
-    cap = cv2.VideoCapture('C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\video\\wideo2.mp4')
+    cap = cv2.VideoCapture('video/wideo2.mp4')
     if not cap.isOpened():
         print("Nie można otworzyć kamery")
         return
