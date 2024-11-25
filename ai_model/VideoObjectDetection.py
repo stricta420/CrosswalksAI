@@ -2,6 +2,10 @@ import cv2
 import os
 import supervision as sv
 from ultralytics import YOLOv10
+from pathlib import Path
+
+
+HOME = Path(__file__).resolve().parent.parent
 
 
 class VideoObjectDetection:
@@ -68,11 +72,11 @@ class VideoObjectDetection:
 
 #tutaj dobre sciezki!
 if __name__ == "__main__":
-    MODEL_PATH = os.path.abspath("./CrosswalksAI/models/human.pt")
-    MODEL_PATH1 = os.path.abspath("./CrosswalksAI/models/zebra.pt")
+    MODEL_PATH = HOME/"models/human.pt"
+    MODEL_PATH1 = HOME/"models/zebra.pt"
 
 
-    VIDEO_PATH = os.path.abspath("./CrosswalksAI/video/wideo2.mp4")
+    VIDEO_PATH = HOME/"video/wideo2.mp4"
 
     detector = VideoObjectDetection( video_path=VIDEO_PATH)
     detector.appendModel(MODEL_PATH)
