@@ -68,10 +68,11 @@ class VideoObjectDetection:
 
 #tutaj dobre sciezki!
 if __name__ == "__main__":
-    MODEL_PATH = r'models/human.pt'
-    MODEL_PATH1 = r'models/zebra.pt'
+    MODEL_PATH = os.path.abspath("./CrosswalksAI/models/human.pt")
+    MODEL_PATH1 = os.path.abspath("./CrosswalksAI/models/zebra.pt")
 
-    VIDEO_PATH = r'video/wideo2.mp4'
+
+    VIDEO_PATH = os.path.abspath("./CrosswalksAI/video/wideo2.mp4")
 
     detector = VideoObjectDetection( video_path=VIDEO_PATH)
     detector.appendModel(MODEL_PATH)
