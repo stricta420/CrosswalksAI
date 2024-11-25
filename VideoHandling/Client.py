@@ -19,7 +19,7 @@ def main():
         return
 
     # Otwieranie kamery
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture('C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\video\\wideo2.mp4')
     if not cap.isOpened():
         print("Nie można otworzyć kamery")
         return
@@ -63,14 +63,15 @@ def main():
                     break
             
             # Dekodowanie analizowanego obrazu
-            analyzed_frame = cv2.imdecode(np.frombuffer(analyzed_frame_data, np.uint8), cv2.IMREAD_GRAYSCALE)
+            analyzed_frame = cv2.imdecode(np.frombuffer(analyzed_frame_data, np.uint8), cv2.IMREAD_COLOR)
 
             # Wyświetlanie wyników analizy
             cv2.imshow('Oryginalny Obraz', frame)
             cv2.imshow('Analiza', analyzed_frame)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(2) & 0xFF == ord('q'):
                 break
+            
     except Exception as e:
         print(f"Błąd w trakcie działania: {e}")
     finally:

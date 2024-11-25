@@ -2,19 +2,39 @@ import socket
 import pickle
 import cv2
 import numpy as np
+import supervision as sv
+from ultralytics import YOLOv10
 
 # Konfiguracja serwera
 HOST = "127.0.0.1"  # Nasłuch na wszystkich interfejsach sieciowych
 PORT = 5000
 HEADERSIZE = 10
+MODEL_PATH = r'C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\models\\human.pt'
+MODEL_PATH1 = r'C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\models\\zebra.pt'
+models = []
+bounding_box_annotator = sv.BoundingBoxAnnotator()
+label_annotator = sv.LabelAnnotator()
+
+def appendModel(modelPath):
+        models.append(YOLOv10(modelPath))
 
 def analyze_image(image):
-    # Prosta analiza obrazu - wykrywanie krawędzi
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    edges = cv2.Canny(gray, 100, 200)
-    return edges
+    Rs = []
+    for model in models:
+        Rs.append(model(image)[0])
+    
+    for results in Rs:
+        detections = sv.Detections.from_ultralytics(results)
+        annotated_image = bounding_box_annotator.annotate(
+        scene=image, detections=detections)
+        annotated_image = label_annotator.annotate(
+        scene=annotated_image, detections=detections)
+    return annotated_image
+
 
 def main():
+    appendModel(MODEL_PATH)
+    appendModel(MODEL_PATH1)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((HOST, PORT))
     server_socket.listen()

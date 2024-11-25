@@ -5,8 +5,10 @@ from ultralytics import YOLOv10
 
 
 class VideoObjectDetection:
-    def __init__(self, model_path, video_path, output_dir="output"):
-        self.model = YOLOv10(model_path)
+    def __init__(self, video_path, output_dir="output"):
+        # self.model = YOLOv10(model_path)
+        # self.model1 = YOLOv10(model_path1)
+        self.models = []
         self.video_path = video_path
         self.output_dir = output_dir
         self.cap = cv2.VideoCapture(self.video_path)
@@ -16,25 +18,25 @@ class VideoObjectDetection:
 
         if not self.cap.isOpened():
             raise ValueError(f"Error: Unable to open video at path: {self.video_path}")
+        
+    def appendModel(self,modelPath):
+        self.models.append(YOLOv10(modelPath))
 
     def process_frame(self, frame):
-        """
-        Process a single frame: run detection, annotate with bounding boxes and labels.
-        """
-        results = self.model(frame)[0]
-        detections = sv.Detections.from_ultralytics(results)
-
-        annotated_image = self.bounding_box_annotator.annotate(
+        Rs = []
+        for model in self.models:
+            Rs.append(model(frame)[0])
+        
+        for results in Rs:
+            detections = sv.Detections.from_ultralytics(results)
+            annotated_image = self.bounding_box_annotator.annotate(
             scene=frame, detections=detections)
-        annotated_image = self.label_annotator.annotate(
+            annotated_image = self.label_annotator.annotate(
             scene=annotated_image, detections=detections)
-
         return annotated_image
 
     def run(self):
-        """
-        Main method to process the video frame by frame.
-        """
+  
         print("Starting video processing...")
 
         while True:
@@ -49,7 +51,7 @@ class VideoObjectDetection:
             cv2.imshow('Object Detection', annotated_image)
 
             # Handle user input to close
-            key = cv2.waitKey(1)
+            key = cv2.waitKey(2)
             if key % 256 == 27:  # ESC key
                 print("CLOSING")
                 break
@@ -67,7 +69,11 @@ class VideoObjectDetection:
 #tutaj dobre sciezki!
 if __name__ == "__main__":
     MODEL_PATH = r'C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\models\\human.pt'
+    MODEL_PATH1 = r'C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\models\\zebra.pt'
+
     VIDEO_PATH = r'C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\video\\wideo2.mp4'
 
-    detector = VideoObjectDetection(model_path=MODEL_PATH, video_path=VIDEO_PATH)
+    detector = VideoObjectDetection( video_path=VIDEO_PATH)
+    detector.appendModel(MODEL_PATH)
+    detector.appendModel(MODEL_PATH1)
     detector.run()
