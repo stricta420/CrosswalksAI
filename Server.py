@@ -11,6 +11,8 @@ PORT = 5000
 HEADERSIZE = 10
 MODEL_PATH = r'C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\models\\human.pt'
 MODEL_PATH1 = r'C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\models\\zebra.pt'
+MODEL_PATH2 = r'C:\\Users\\Stasiu\\Desktop\\crosswalks\\CrosswalksAI\\models\\best.pt'
+
 models = []
 bounding_box_annotator = sv.BoundingBoxAnnotator()
 label_annotator = sv.LabelAnnotator()
@@ -35,6 +37,8 @@ def analyze_image(image):
 def main():
     appendModel(MODEL_PATH)
     appendModel(MODEL_PATH1)
+    appendModel(MODEL_PATH2)
+
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((HOST, PORT))
     server_socket.listen()
