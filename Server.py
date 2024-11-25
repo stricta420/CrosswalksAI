@@ -4,15 +4,16 @@ import cv2
 import numpy as np
 import supervision as sv
 from ultralytics import YOLOv10
-import os
+from pathlib import Path
 
 # Konfiguracja serwera
 HOST = "127.0.0.1"  # Nasłuch na wszystkich interfejsach sieciowych
 PORT = 5000
 HEADERSIZE = 10
-MODEL_PATH = os.path.abspath("./CrosswalksAI/models/human.pt")
-MODEL_PATH1 = os.path.abspath("./CrosswalksAI/models/zebra.pt")
-MODEL_PATH2 = os.path.abspath("./CrosswalksAI/models/best.pt")
+HOME = Path(__file__).resolve().parent
+MODEL_PATH = HOME/"models/human.pt"
+MODEL_PATH1 = HOME/"models/zebra.pt"
+MODEL_PATH2 = HOME/"models/best.pt"
 
 models = []
 bounding_box_annotator = sv.BoundingBoxAnnotator()

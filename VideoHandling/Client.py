@@ -3,11 +3,14 @@ import socket
 import pickle
 import numpy as np
 import os
+from pathlib import Path
+
 
 # Konfiguracja klienta
 SERVER_IP = '127.0.0.1'  # Publiczny adres IP serwera
 PORT = 5000
 HEADERSIZE = 10
+HOME = Path(__file__).resolve().parent.parent
 
 def main():
     # Połączenie z serwerem
@@ -20,7 +23,7 @@ def main():
         return
 
     # Otwieranie kamery
-    cap = cv2.VideoCapture(os.path.abspath("./CrosswalksAI/video/wideo2.mp4"))
+    cap = cv2.VideoCapture(HOME/"video/wideo2.mp4")
     if not cap.isOpened():
         print("Nie można otworzyć kamery")
         return
