@@ -4,6 +4,7 @@ import pickle
 import numpy as np
 import os
 from pathlib import Path
+import ssl
 
 HOME = Path(__file__).resolve().parent.parent
 
@@ -19,7 +20,14 @@ class VideoClient:
     def connect_to_server(self):
         try:
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            
+            self.context = ssl.create_default_context()
+            self.context.check_hostname = False
+            self.context.verify_mode = ssl.CERT_NONE #wyłączona weryfikacja dla testów
+            self.client_socket = self.context.wrap_socket(self.client_socket, server_hostname=self.server_ip)
+
             self.client_socket.connect((self.server_ip, self.port))
+
             print(f"Połączono z serwerem {self.server_ip}:{self.port}")
         except Exception as e:
             print(f"Błąd podczas łączenia z serwerem: {e}")
@@ -98,6 +106,8 @@ if __name__ == "__main__":
     SERVER_IP = '127.0.0.1'  # Publiczny adres IP serwera
     PORT = 5000
     VIDEO_PATH = HOME/"video/wideo2.mp4"
+
+    
 
     client = VideoClient(SERVER_IP, PORT)
     client.run(VIDEO_PATH)

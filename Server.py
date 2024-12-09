@@ -5,13 +5,16 @@ import numpy as np
 import supervision as sv
 from ultralytics import YOLOv10
 from pathlib import Path
+import ssl
 
 HOME = Path(__file__).resolve().parent
 
 class VideoServer:
-    def __init__(self, host, port, headersize=10):
+    def __init__(self, host, port, certificate=None, key=None, headersize=10):
         self.host = host
         self.port = port
+        self.certificate = certificate if certificate is not None else None
+        self.key = key if key is not None else None
         self.headersize = headersize
         self.home = Path(__file__).resolve().parent
         self.models = []
@@ -25,11 +28,26 @@ class VideoServer:
             self.models.append(model)
         except Exception as e:
             print(f"Błąd podczas ładowania modelu {model_path}: {e}")
+    
+    def secure_socket(self):
+        # Konfiguracja SSL
+        self.context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        self.context.load_cert_chain(certfile=self.certificate, keyfile=self.key)
+
+        # Owijanie gniazda w SSL
+        self.server_socket = self.context.wrap_socket(self.server_socket, server_side=True)
+        print("Socket secured!")
 
     def setup_server(self):
         try:
             self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.server_socket.bind((self.host, self.port))
+
+            if(self.certificate!=None and self.key!=None):
+                self.secure_socket()
+            else:
+                print("Socket not secure!")
+
             self.server_socket.listen()
             print(f"Serwer nasłuchuje na {self.host}:{self.port}...")
         except Exception as e:
@@ -98,7 +116,10 @@ if __name__ == "__main__":
     HOST = "127.0.0.1"  # Adres hosta
     PORT = 5000          # Port nasłuchiwania
 
-    server = VideoServer(HOST, PORT)
+    CERT_FILE = HOME/"klucze/cert.pem"
+    KEY_FILE = HOME/"klucze/key.pem"
+
+    server = VideoServer(HOST, PORT,CERT_FILE,KEY_FILE)
     server.load_model(HOME/"models/human.pt")
     server.load_model(HOME/"models/zebra.pt")
     server.load_model(HOME/"models/best.pt")
