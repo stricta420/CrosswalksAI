@@ -6,87 +6,106 @@ import supervision as sv
 from ultralytics import YOLOv10
 from pathlib import Path
 
-# Konfiguracja serwera
-HOST = "127.0.0.1"  # Nasłuch na wszystkich interfejsach sieciowych
-PORT = 5000
-HEADERSIZE = 10
 HOME = Path(__file__).resolve().parent
-MODEL_PATH = HOME/"models/human.pt"
-MODEL_PATH1 = HOME/"models/zebra.pt"
-MODEL_PATH2 = HOME/"models/best.pt"
 
-models = []
-bounding_box_annotator = sv.BoundingBoxAnnotator()
-label_annotator = sv.LabelAnnotator()
+class VideoServer:
+    def __init__(self, host, port, headersize=10):
+        self.host = host
+        self.port = port
+        self.headersize = headersize
+        self.home = Path(__file__).resolve().parent
+        self.models = []
+        self.bounding_box_annotator = sv.BoundingBoxAnnotator()
+        self.label_annotator = sv.LabelAnnotator()
+        self.server_socket = None
 
-def appendModel(modelPath):
-        models.append(YOLOv10(modelPath))
+    def load_model(self, model_path):
+        try:
+            model = YOLOv10(model_path)
+            self.models.append(model)
+        except Exception as e:
+            print(f"Błąd podczas ładowania modelu {model_path}: {e}")
 
-def analyze_image(image):
-    Rs = []
-    for model in models:
-        Rs.append(model(image)[0])
-    
-    for results in Rs:
-        detections = sv.Detections.from_ultralytics(results)
-        annotated_image = bounding_box_annotator.annotate(
-        scene=image, detections=detections)
-        annotated_image = label_annotator.annotate(
-        scene=annotated_image, detections=detections)
-    return annotated_image
+    def setup_server(self):
+        try:
+            self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.server_socket.bind((self.host, self.port))
+            self.server_socket.listen()
+            print(f"Serwer nasłuchuje na {self.host}:{self.port}...")
+        except Exception as e:
+            print(f"Błąd podczas konfiguracji serwera: {e}")
+            raise
 
+    def analyze_image(self, image):
+        try:
+            for model in self.models:
+                results = model(image)[0]
+                detections = sv.Detections.from_ultralytics(results)
+                image = self.bounding_box_annotator.annotate(scene=image, detections=detections)
+                image = self.label_annotator.annotate(scene=image, detections=detections)
+            return image
+        except Exception as e:
+            print(f"Błąd podczas analizy obrazu: {e}")
+            raise
 
-def main():
-    appendModel(MODEL_PATH)
-    appendModel(MODEL_PATH1)
-    appendModel(MODEL_PATH2)
+    def handle_client(self, conn):
+        try:
+            while True:
+                full_msg = b''
+                new_msg = True
 
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((HOST, PORT))
-    server_socket.listen()
-    print(f"Serwer nasłuchuje na {HOST}:{PORT}...")
+                while True:
+                    data = conn.recv(4096)
+                    if new_msg:
+                        if len(data) < self.headersize:
+                            raise Exception("Niepełne dane nagłówka, przerywam.")
+                        msglen = int(data[:self.headersize])
+                        new_msg = False
 
-    conn, addr = server_socket.accept()
-    print(f"Połączono z {addr}")
+                    full_msg += data
 
-    while True:
-        # Odbiór obrazu
-        full_msg = b''
-        isfull_msg = False
-        new_msg = True
+                    if len(full_msg) - self.headersize == msglen:
+                        frame_data = pickle.loads(full_msg[self.headersize:])
+                        frame = cv2.imdecode(np.frombuffer(frame_data, np.uint8), cv2.IMREAD_COLOR)
+                        analyzed_frame = self.analyze_image(frame)
 
-        while not isfull_msg:
-            data = conn.recv(4096)
-            if new_msg:
-                print("new msg len:",data[:HEADERSIZE])
-                msglen = int(data[:HEADERSIZE])
-                new_msg = False
-                print(f"full message length: {msglen}")
-            full_msg += data
-            if len(full_msg)-HEADERSIZE == msglen:
-               
-                isfull_msg = True
-        
-        
-        # Deserializacja obrazu
-        frame_data = pickle.loads(full_msg[HEADERSIZE:])
-        frame = cv2.imdecode(np.frombuffer(frame_data, np.uint8), cv2.IMREAD_COLOR)
+                        _, buffer = cv2.imencode('.jpg', analyzed_frame)
+                        analyzed_data = pickle.dumps(buffer)
+                        analyzed_data = bytes(f"{len(analyzed_data):<{self.headersize}}", 'utf-8') + analyzed_data
+                        conn.send(analyzed_data)
+                        break
+        except Exception as e:
+            print(f"Błąd podczas obsługi klienta: {e}")
+        finally:
+            conn.close()
 
-        # Analiza obrazu
-        analyzed_frame = analyze_image(frame)
+    def run(self):
+        self.setup_server()
 
-        # Serializacja wyników analizy
-        _, buffer = cv2.imencode('.jpg', analyzed_frame)
-        analyzed_data = pickle.dumps(buffer)
-        analyzed_data = bytes(f"{len(analyzed_data):<{HEADERSIZE}}", 'utf-8') + analyzed_data
-
-        # Wysyłanie wyników analizy
-        conn.send(analyzed_data)
-        full_msg = b""
-        new_msg = True
-
-    conn.close()
-    server_socket.close()
+        while True:
+            try:
+                conn, addr = self.server_socket.accept()
+                print(f"Połączono z {addr}")
+                self.handle_client(conn)
+            except Exception as e:
+                print(f"Błąd podczas akceptacji połączenia: {e}")
+            
+    def cleanup(self):
+        if self.server_socket:
+            self.server_socket.close()
 
 if __name__ == "__main__":
-    main()
+    HOST = "127.0.0.1"  # Adres hosta
+    PORT = 5000          # Port nasłuchiwania
+
+    server = VideoServer(HOST, PORT)
+    server.load_model(HOME/"models/human.pt")
+    server.load_model(HOME/"models/zebra.pt")
+    server.load_model(HOME/"models/best.pt")
+
+    try:
+        server.run()
+    except KeyboardInterrupt:
+        print("Serwer zatrzymany.")
+    finally:
+        server.cleanup()
