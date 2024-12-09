@@ -71,6 +71,24 @@ class VideoClient:
         cv2.imshow('Oryginalny Obraz', original_frame)
         cv2.imshow('Analiza', analyzed_frame)
 
+    def receive_message(self):
+        full_msg = b''
+        new_msg = True
+
+        while True:
+            data = self.client_socket.recv(4096)
+            if new_msg:
+                if len(data) < self.headersize:
+                    raise Exception("Niepełne dane nagłówka, przerywam.")
+                msglen = int(data[:self.headersize])
+                new_msg = False
+
+            full_msg += data
+
+            if len(full_msg) - self.headersize == msglen:
+                print("Odebrano pełny komunikat.")
+                return pickle.loads(full_msg[self.headersize:])
+
     def run(self, video_path):
         try:
             self.connect_to_server()
@@ -83,9 +101,8 @@ class VideoClient:
                     break
 
                 self.send_frame(frame)
-                analyzed_frame = self.receive_analyzed_frame()
-
-                self.display_frames(frame, analyzed_frame)
+                message = self.receive_message()
+                print(f"Otrzymana wiadomość: {message}")
 
                 if cv2.waitKey(2) & 0xFF == ord('q'):
                     break
@@ -105,7 +122,7 @@ class VideoClient:
 if __name__ == "__main__":
     SERVER_IP = '127.0.0.1'  # Publiczny adres IP serwera
     PORT = 5000
-    VIDEO_PATH = HOME/"video/wideo2.mp4"
+    VIDEO_PATH = HOME/"video/wideo3.mp4"
 
     
 

@@ -59,9 +59,11 @@ class VideoServer:
             for model in self.models:
                 results = model(image)[0]
                 detections = sv.Detections.from_ultralytics(results)
-                image = self.bounding_box_annotator.annotate(scene=image, detections=detections)
-                image = self.label_annotator.annotate(scene=image, detections=detections)
-            return image
+                # Sprawdzenie, czy wykryto osobę
+                for label in detections.class_id:
+                    if label == 0:  # Zakładając, że klasa "person" ma ID 0
+                        return "zielone światło"
+            return "czerwone światło"
         except Exception as e:
             print(f"Błąd podczas analizy obrazu: {e}")
             raise
@@ -85,12 +87,12 @@ class VideoServer:
                     if len(full_msg) - self.headersize == msglen:
                         frame_data = pickle.loads(full_msg[self.headersize:])
                         frame = cv2.imdecode(np.frombuffer(frame_data, np.uint8), cv2.IMREAD_COLOR)
-                        analyzed_frame = self.analyze_image(frame)
+                        analysis_result = self.analyze_image(frame)
 
-                        _, buffer = cv2.imencode('.jpg', analyzed_frame)
-                        analyzed_data = pickle.dumps(buffer)
-                        analyzed_data = bytes(f"{len(analyzed_data):<{self.headersize}}", 'utf-8') + analyzed_data
-                        conn.send(analyzed_data)
+                        # Wysyłanie wyników analizy (zielone lub czerwone światło)
+                        result_data = pickle.dumps(analysis_result)
+                        result_data = bytes(f"{len(result_data):<{self.headersize}}", 'utf-8') + result_data
+                        conn.send(result_data)
                         break
         except Exception as e:
             print(f"Błąd podczas obsługi klienta: {e}")
