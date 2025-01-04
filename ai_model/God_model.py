@@ -1,6 +1,4 @@
-import torch
 import cv2
-import os
 from ultralytics import YOLOv10
 from deepface import DeepFace
 import math
@@ -20,6 +18,7 @@ class ImageInfo:
         print(self.label)
         print(self.confidence)
 
+
 class GodModel:
     def __init__(self):
         self.human_model = None
@@ -32,28 +31,9 @@ class GodModel:
         self.disable_model = YOLOv10(disable)
         self.zebra_model = YOLOv10(zebra)
 
-    def disabilyty_scan(self, frame):
-        resoult = self.disable_model(frame)
-        boxes = resoult[0].boxes
-        names = resoult[0].names
-        all_results = []
-        for i, box in enumerate(boxes):
-            # 'box' jest obiektem klasy Boxes, więc musimy uzyskać współrzędne
-            x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()  # Pobierz współrzędne jako ndarray
-            x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])  # Konwertujemy na int
 
-            # Pobierz etykietę i pewność detekcji
-            label = names[int(box.cls)]  # Etykieta (klasa obiektu)
-            confidence = box.conf.item()  # Pewność detekcji
+    def break_down_image(self, results):
 
-            # Wycinanie obrazu z pojedynczym obiektem
-            cropped_object = frame[y1:y2, x1:x2]
-            new_img = ImageInfo(cropped_object, label, confidence, x1, y1, x2, y2)
-            all_results.append(new_img)
-        return all_results
-
-    def break_down_image(self, frame):
-        results = self.human_model(frame)
         boxes = results[0].boxes  # Obiekt zawierający bounding boxy
         names = results[0].names  # Słownik z nazwami klas
         all_results = []
@@ -80,7 +60,7 @@ class GodModel:
         ages = []
         for image_single in images:
             analize = DeepFace.analyze(img_path=image_single.image, actions=['age'],
-                                       enforce_detection=False)  # z jakiegoś powodu enforce_detection = False powoduje że błąd się nie pojawia i analizowane są WSZYSTKIE twarze (gdzie bez tego wywala błąd bo 1 nie może zanalizować) dlaczego? nie wiem, powinno być inaczej
+                                       enforce_detection=False)
             ages.append(analize[0]['age'])
         return ages
 
@@ -136,21 +116,25 @@ class GodModel:
         else:
             return False
 
-    def ignore_people_on_crosswalk(self, crosswalk_img, people):
+    def ignore_people_on_crosswalk(self, crosswalks, people):
         new_people = []
         for person in people:
-            if not self.is_on(person, crosswalk_img):
+            do_add = True
+            for crosswalk_img in crosswalks:
+                if self.is_on(person, crosswalk_img):
+                    do_add = False
+            if do_add:
                 new_people.append(copy.deepcopy(person))
         return new_people
 
-    #TO DO: add logic to exclude people that are already on zebra corosing
     #returns : number_of_people, maks_age,
     def analize_frame(self, frame):
-        people = self.break_down_image(frame)
+        people = self.break_down_image(self.human_model(frame))
+        zebra = self.break_down_image(self.zebra_model(frame))
+        people = self.ignore_people_on_crosswalk(zebra, people)
         ages = self.get_ages_from_images(people)
-        zebra = self.zebra_model(frame)
-        #people_not_on_zebra = self.ignore_people_on_crosswalk(zebra, people)
-        disabilytis = self.disabilyty_scan(frame)
+
+        disabilytis = self.break_down_image(self.disable_model(frame))
         disble_with_age = {}
         if len(disabilytis) != 0:
             for i in range(len(disabilytis)):
@@ -163,8 +147,8 @@ class GodModel:
         return disble_with_age, ages
 
 
-
-god_mod = GodModel()
-image_path = "test2.jpg"
-frame = cv2.imread(image_path)
-print(god_mod.analize_frame(frame))
+if __name__ == "__main__":
+    god_mod = GodModel()
+    image_path = "test2.jpg"
+    frame = cv2.imread(image_path)
+    print(god_mod.analize_frame(frame))
