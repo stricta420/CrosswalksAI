@@ -73,7 +73,7 @@ class VideoServer:
                         frame = cv2.imdecode(np.frombuffer(frame_data, np.uint8), cv2.IMREAD_COLOR)
                         analysis_result = self.models.analize_frame(frame)
                         
-                        decision = decision_maker.make_decision(analysis_result)
+                        decision = decision_maker.make_decision(analysis_result,5)
                         print(f"Decision: {decision}")
 
                         result_data = pickle.dumps((analysis_result, decision))
