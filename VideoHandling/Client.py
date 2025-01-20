@@ -67,9 +67,6 @@ class VideoClient:
                 analyzed_frame_data = pickle.loads(full_msg[self.headersize:])
                 return cv2.imdecode(np.frombuffer(analyzed_frame_data, np.uint8), cv2.IMREAD_COLOR)
 
-    def display_frames(self, original_frame, analyzed_frame):
-        cv2.imshow('Oryginalny Obraz', original_frame)
-        cv2.imshow('Analiza', analyzed_frame)
 
     def receive_message(self):
         full_msg = b''
@@ -94,23 +91,34 @@ class VideoClient:
             self.connect_to_server()
             self.open_video(video_path)
 
+            # Pobierz FPS wideo
+            fps = int(self.cap.get(cv2.CAP_PROP_FPS))
+            frames_to_skip = int(fps * 0.5)  # Liczba klatek do pominięcia, aby wysyłać co 0.5 sekundy
+
+            frame_counter = 0  # Licznik klatek
+
             while True:
                 ret, frame = self.cap.read()
                 if not ret:
-                    print("Nie można odczytać klatki z kamery")
+                    print("Nie można odczytać klatki z pliku wideo")
                     break
 
-                self.send_frame(frame)
-                message = self.receive_message()
-                print(f"Otrzymana wiadomość: {message}")
+                # Wysyłaj tylko co frames_to_skip klatkę
+                if frame_counter % frames_to_skip == 0:
+                    self.send_frame(frame)  # Wysyłanie klatki
+                    message = self.receive_message()  # Odbieranie odpowiedzi
+                    print(f"Otrzymana wiadomość: {message}")
 
-                if cv2.waitKey(2) & 0xFF == ord('q'):
+                frame_counter += 1
+
+                if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
 
         except Exception as e:
             print(f"Błąd w trakcie działania: {e}")
         finally:
             self.cleanup()
+
 
     def cleanup(self):
         if self.cap:
@@ -122,9 +130,8 @@ class VideoClient:
 if __name__ == "__main__":
     SERVER_IP = '127.0.0.1'  # Publiczny adres IP serwera
     PORT = 5000
-    VIDEO_PATH = HOME/"video/wideo3.mp4"
+    VIDEO_PATH = HOME/"video/wideo4.mp4"
 
-    
 
     client = VideoClient(SERVER_IP, PORT)
     client.run(VIDEO_PATH)

@@ -1,8 +1,12 @@
 import cv2
 from ultralytics import YOLOv10
 from deepface import DeepFace
+from pathlib import Path
 import math
 import copy
+
+HOME = Path(__file__).resolve().parent.parent
+HOME2 = Path(__file__).resolve().parent
 
 class ImageInfo:
     def __init__(self, image, label, confidence, x1=None, y1=None, x2=None, y2=None):
@@ -26,13 +30,13 @@ class GodModel:
         self.zebra_model = None
         self.set_up_models()
 
-    def set_up_models(self, human='../models/human.pt', disable='../models/best.pt', zebra='../models/zebra.pt'):
+    def set_up_models(self, human=HOME/"models/human.pt", disable=HOME/"models/human.pt", zebra=HOME/"models/human.pt"):
         self.human_model = YOLOv10(human)
         self.disable_model = YOLOv10(disable)
         self.zebra_model = YOLOv10(zebra)
 
 
-    def break_down_image(self, results):
+    def break_down_image(self, results, frame):
 
         boxes = results[0].boxes  # Obiekt zawierający bounding boxy
         names = results[0].names  # Słownik z nazwami klas
@@ -129,12 +133,12 @@ class GodModel:
 
     #returns : number_of_people, maks_age,
     def analize_frame(self, frame):
-        people = self.break_down_image(self.human_model(frame))
-        zebra = self.break_down_image(self.zebra_model(frame))
+        people = self.break_down_image(self.human_model(frame),frame)
+        zebra = self.break_down_image(self.zebra_model(frame),frame)
         people = self.ignore_people_on_crosswalk(zebra, people)
         ages = self.get_ages_from_images(people)
 
-        disabilytis = self.break_down_image(self.disable_model(frame))
+        disabilytis = self.break_down_image(self.disable_model(frame),frame)
         disble_with_age = {}
         if len(disabilytis) != 0:
             for i in range(len(disabilytis)):
@@ -149,6 +153,6 @@ class GodModel:
 
 if __name__ == "__main__":
     god_mod = GodModel()
-    image_path = "test2.jpg"
+    image_path = HOME2/"test2.jpg"
     frame = cv2.imread(image_path)
     print(god_mod.analize_frame(frame))
