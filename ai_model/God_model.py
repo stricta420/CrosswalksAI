@@ -143,16 +143,17 @@ class GodModel:
         if len(disabilytis) != 0:
             for i in range(len(disabilytis)):
                 dis = disabilytis[i]
-                closest_indeks = self.find_closest_box(dis, people)
-                if dis.label not in disble_with_age:
-                    disble_with_age[dis.label] = [ages[closest_indeks]]
-                else:
-                    disble_with_age[dis.label] += [ages[closest_indeks]] #tablica wewnątrz słownika - stąd dodawanie [ages[i]] zamiast ages[i]
+                if dis.label !="Person": #Quick-fix aby nie łapało osób pełnosprawnych
+                    closest_indeks = self.find_closest_box(dis, people)
+                    if dis.label not in disble_with_age:
+                        disble_with_age[dis.label] = [ages[closest_indeks]]
+                    else:
+                        disble_with_age[dis.label] += [ages[closest_indeks]] #tablica wewnątrz słownika - stąd dodawanie [ages[i]] zamiast ages[i]
         return disble_with_age, ages
 
 
 if __name__ == "__main__":
     god_mod = GodModel()
-    image_path = HOME2/"test2.jpg"
+    image_path = HOME/"test2.jpg"
     frame = cv2.imread(image_path)
     print(god_mod.analize_frame(frame))
