@@ -76,7 +76,7 @@ class VideoServer:
                         decision = decision_maker.make_decision(analysis_result,5)
                         print(f"Decision: {decision}")
 
-                        result_data = pickle.dumps((analysis_result, decision))
+                        result_data = pickle.dumps(( decision))
                         result_data = bytes(f"{len(result_data):<{self.headersize}}", 'utf-8') + result_data
                         conn.send(result_data)
                         break
