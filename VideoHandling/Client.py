@@ -1,6 +1,7 @@
 import cv2
 import socket
 import pickle
+import time
 import numpy as np
 import os
 from pathlib import Path
@@ -16,6 +17,8 @@ class VideoClient:
         self.home = Path(__file__).resolve().parent.parent
         self.client_socket = None
         self.cap = None
+        self.signal = True
+        self.max_time = []
 
     def connect_to_server(self):
         try:
@@ -63,7 +66,6 @@ class VideoClient:
             full_msg += data
 
             if len(full_msg) - self.headersize == msglen:
-                print("Odebrano pełny komunikat.")
                 analyzed_frame_data = pickle.loads(full_msg[self.headersize:])
                 return cv2.imdecode(np.frombuffer(analyzed_frame_data, np.uint8), cv2.IMREAD_COLOR)
 
@@ -83,8 +85,8 @@ class VideoClient:
             full_msg += data
 
             if len(full_msg) - self.headersize == msglen:
-                print("Odebrano pełny komunikat.")
                 return pickle.loads(full_msg[self.headersize:])
+                
 
     def run(self, video_path):
         try:
@@ -96,24 +98,36 @@ class VideoClient:
             frames_to_skip = int(fps * 0.5)  # Liczba klatek do pominięcia, aby wysyłać co 0.5 sekundy
 
             frame_counter = 0  # Licznik klatek
-
             while True:
-                ret, frame = self.cap.read()
-                if not ret:
-                    print("Nie można odczytać klatki z pliku wideo")
-                    break
+                counter = 0
+                while True:
+                    
+                    ret, frame = self.cap.read()
+                    if not ret:
+                        print("Nie można odczytać klatki z pliku wideo")
+                        break
 
-                # Wysyłaj tylko co frames_to_skip klatkę
-                if frame_counter % frames_to_skip == 0:
-                    self.send_frame(frame)  # Wysyłanie klatki
-                    message = self.receive_message()  # Odbieranie odpowiedzi
-                    print(f"Otrzymana wiadomość: {message}")
-
-                frame_counter += 1
+                    # Wysyłaj tylko co frames_to_skip klatkę
+                    if self.signal and frame_counter % frames_to_skip == 0:
+                        self.send_frame(frame)  # Wysyłanie klatki
+                        message = self.receive_message()  # Odbieranie odpowiedzi
+                        print(f"Zbieranie danych podczas czerwonego: {message}")
+                        self.max_time.append(message)
+                        counter=counter+1
+                    elif counter==5: 
+                        self.signal = False 
+                        break
+                    frame_counter += 1
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
-
+                if counter==5:
+                    self.signal = True
+                    maxt = max(self.max_time)
+                    print(f"Zielone: {maxt}")
+                    time.sleep(maxt)
+                    counter=0
+                    self.max_time = []
         except Exception as e:
             print(f"Błąd w trakcie działania: {e}")
         finally:
